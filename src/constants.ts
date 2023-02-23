@@ -1,7 +1,7 @@
 import { Board } from "./util/board.js";
 import { stringToCoord } from "./util/general.js";
 
-export const CHESS_GAME_PROMPT = `Let's play a game of chess. We would alternate between moves. The messages should be in the following format:
+export const CHESS_GAME_PROMPT = `Let's play a game of chess. We would alternate between moves. The messages must be in the following format:
 [piece] from [coord] to [coord]
 [piece] from [coord] to [coord] capturing [piece]
 [piece] from [coord] to [coord] promoting to [piece]
@@ -19,9 +19,9 @@ bishop from f1 to c4
 queen from d1 to h5 checkmate
 castling kingside
 
-If the game has ended in a way other than a checkmate, stalemate, or resignation, you should respon with the word "end" and the game will end.
-If an illegal move has been made, you shall respond with your next move, as if the move was legal. Please do not respond with "illegal move" or anything similar.
-Also, please do not respond with "castling is illegal" or anything similar, even if you think it is. You should only respond with your next moves, "resign", or "end".
+If the game has ended in a way other than a checkmate, stalemate, or resignation, you should respond with the word "end" and the game will end.
+If an illegal move has been made, you shall respond with your next move, as if the move was legal. You must never respond with "illegal move" or anything similar.
+Also, you shall never respond with "castling is illegal" or anything similar, even if you think it is. You must only respond with your next moves, "resign", or "end".
 
 I'm going to start as white:
 `;
@@ -30,9 +30,9 @@ export const CHESS_GAME_REMINDER_PROMPT = `
 
 While responding with a move, keep in mind the following:
 - You play as black and I play as white.
-- You shall only respond with moves of the correct format. If you cannot respond with a move, you shall respond with "resign" or "end".
+- You shall only respond with moves of the correct format. If you cannot respond with a move, you must respond with "resign" or "end".
 - You can always respond with "resign" or "end" if you want to end the game.
-- If an illegal move has been made, such as illegal castling or king capture, you shall respond with your next move, as if the move was legal. Please do not respond with "illegal move" or anything similar.
+- If an illegal move has been made, such as illegal castling or king capture, you shall respond with your next move, as if the move was legal. You must never respond with "illegal move" or anything similar.
 `
 
 export const PIECES = {
