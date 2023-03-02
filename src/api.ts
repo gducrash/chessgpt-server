@@ -1,30 +1,37 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-// import { ChatGPTAPIBrowser } from 'chatgpt';
-import ChatGPTUnlockedAPI from './chatgptUnlocked.js';
-
-import { CHESS_GAME_PROMPT, CHESS_GAME_REMINDER_PROMPT, DEFAULT_BOARD } from './constants.js';
+import { SYSTEM_PROMPT, CHESS_GAME_PROMPT, CHESS_GAME_REMINDER_PROMPT, DEFAULT_BOARD } from './constants.js';
 import { parseMoveString, generateMoveString, GameMove } from './util/moves.js';
 import { Board, movePieceOnBoard } from './util/board.js';
 import { GameSound, isPiece } from './util/general.js';
 
-// const api = new ChatGPTAPIBrowser({
-//     email: process.env.OPENAI_EMAIL!,
-//     password: process.env.OPENAI_PASSWORD!,
-// });
+interface ChatGPTAPISendMessageOptions {
+    parentMessageId?: string;
+}
+interface ChatGPTAPISendMessageResponse {
+    id: string;
+    text: string;
+}
+interface ChatGPTAPIInterface {
+    sendMessage (message: string, opts: ChatGPTAPISendMessageOptions): Promise<ChatGPTAPISendMessageResponse>;
+}
 
-// const api = new ChatGPTAPI({
-//     apiKey: process.env.OPENAI_API_KEY!,
-// });
+let api: ChatGPTAPIInterface;
 
-const api = new ChatGPTUnlockedAPI();
+(async () => {
+    const { ChatGPTAPI } = await import('chatgpt');
+    api = new ChatGPTAPI({
+        apiKey: process.env.OPENAI_API_KEY!,
+        systemMessage: SYSTEM_PROMPT,
+    });
+    console.log('🤖 ChatGPT API initialized');
+})();
+
+// const api = new ChatGPTUnlockedAPI();
 
 export type GameSession = {
     id: string;
-    serverId?: number;
-    user?: string;
-    conversationId?: string;
     messageId?: string;
 
     board: Board;
@@ -35,10 +42,6 @@ export type GameSession = {
 }
 
 export const sessions: Map<string, GameSession> = new Map();
-
-export const initApi = async () => {
-    // await api.initSession();
-}
 
 export const createGameSession = (id: string) => {
     const session: GameSession = {
@@ -103,16 +106,13 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
 
     // send move to chatgpt
     let userMoveStr = generateMoveString(userMove);
-    if (!session.conversationId) userMoveStr = CHESS_GAME_PROMPT + userMoveStr;
+    if (!session.messageId) userMoveStr = CHESS_GAME_PROMPT + userMoveStr;
     else if (Math.random() < 0.32) userMoveStr += CHESS_GAME_REMINDER_PROMPT;
 
     let res;
     
     try {
         res = await api.sendMessage(userMoveStr, {
-            server: session.serverId,
-            user: session.user,
-            conversationId: session.conversationId,
             parentMessageId: session.messageId,
         });
     } catch (e) {
@@ -122,24 +122,21 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
         throw e;
     }
 
-    session.serverId = res.serverId;
-    session.user = res.user;
-    session.conversationId = res.conversationId;
-    session.messageId = res.messageId;
+    session.messageId = res.id;
     
     // parse response
-    const botMove = parseMoveString(res.response) as any;
+    const botMove = parseMoveString(res.text) as any;
     if (!botMove) {
         session.turn = 'white';
         session.lastMoveDate = new Date();
         session.lastMove = prevLastMove;
         session.board = prevBoard;
-        return [null, res.response, false, "error"];
+        return [null, res.text, false, "error"];
     }
 
     // if bot move is resign
     if (botMove.resign) {
-        return [botMove, res.response, true, "end"];
+        return [botMove, res.text, true, "end"];
     }
 
     // update board
@@ -158,7 +155,7 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
 
     // if bot move is checkmate or stalemate, end game
     if (botMove.checkmate || botMove.stalemate) {
-        return [botMove, res.response, true, "end"];
+        return [botMove, res.text, true, "end"];
     }
 
     // if bot move is valid, update board and turn
@@ -166,6 +163,6 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
     session.lastMoveDate = new Date();
     session.lastMove = botMove;
 
-    return [botMove as GameMove, res.response, false, sound];
+    return [botMove as GameMove, res.text, false, sound];
 
 }

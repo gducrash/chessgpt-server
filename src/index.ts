@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 
-import { initApi, sessions, createGameSession, getGameSession, makeMove } from './api.js';
+import { sessions, createGameSession, getGameSession, makeMove } from './api.js';
 import { GameMove } from './util/moves.js';
 import { moveSchema } from './validate.js';
 import { GameSound } from './util/general.js';
@@ -69,8 +69,6 @@ async function main() {
             date: session.lastMoveDate, 
             response: botResponse, 
             board: session.board,
-            serverId: session.serverId,
-            user: session.user,
             gameEnd, sound
         });
     });
@@ -84,8 +82,6 @@ async function main() {
             move: session.lastMove, 
             date: session.lastMoveDate, 
             board: session.board,
-            serverId: session.serverId,
-            user: session.user,
             gameEnd: session.ended
         });
     });
@@ -110,16 +106,6 @@ const getStats = () => {
     return {
         activeSessions: {
             total: sessionsArr.length,
-            server1: sessionsArr.filter(s => s.serverId === 1).length,
-            server2: sessionsArr.filter(s => s.serverId === 2).length,
-            server3: sessionsArr.filter(s => s.serverId === 3).length,
-            server4: sessionsArr.filter(s => s.serverId === 4).length,
-            server5: sessionsArr.filter(s => s.serverId === 5).length,
-            server6: sessionsArr.filter(s => s.serverId === 6).length,
-            server7: sessionsArr.filter(s => s.serverId === 7).length,
-            server8: sessionsArr.filter(s => s.serverId === 8).length,
-            server9: sessionsArr.filter(s => s.serverId === 9).length,
-            server10: sessionsArr.filter(s => s.serverId === 10).length,
         }
     };
 }
