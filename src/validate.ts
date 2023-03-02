@@ -21,6 +21,7 @@ export const moveSchemaNormal = zod.object({
     promoting: movePieceSchema.optional(),
     check: zod.boolean().optional(),
     checkmate: zod.boolean().optional(),
+    selfCheckmate: zod.boolean().optional(),
     stalemate: zod.boolean().optional(),
 });
 export const moveSchemaResign = zod.object({
