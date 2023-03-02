@@ -98,8 +98,8 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
     if (userMoveAny.checkmate || userMoveAny.selfCheckmate || userMoveAny.stalemate) {
         let s: string = "Good Game!";
         if (userMoveAny.checkmate) s = 'You beat me! Good game.';
-        else if (userMoveAny.selfCheckmate) 'You have no moves left. I win!';
-        else if (userMoveAny.stalemate) 'Draw! Good game.';
+        else if (userMoveAny.selfCheckmate) s = 'You have no moves left. I win!';
+        else if (userMoveAny.stalemate) s = 'Draw! Good game.';
         return [null, s, true, "end"];
     }
     
