@@ -56,7 +56,9 @@ export const getGameSession = (id: string) => {
     return sessions.get(id);
 }
 
-export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMove|null, string, boolean, GameSound?]> => {
+export const makeMove = async (id: string, userMove: GameMove): Promise<[
+    GameMove|null, string, boolean, GameSound?, Board?
+]> => {
 
     const session = getGameSession(id);
     if (!session) throw new Error('Session not found');
@@ -93,6 +95,8 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
         checkmate: userMoveAny.checkmate,
         stalemate: userMoveAny.stalemate,
     });
+
+    const beforeBotResponseBoard = structuredClone(board);
 
     // if user move checkmate or stalemate, end game
     if (userMoveAny.checkmate || userMoveAny.selfCheckmate || userMoveAny.stalemate) {
@@ -131,12 +135,12 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
         session.lastMoveDate = new Date();
         session.lastMove = prevLastMove;
         session.board = prevBoard;
-        return [null, res.text, false, "error"];
+        return [null, res.text, false, "error", beforeBotResponseBoard];
     }
 
     // if bot move is resign
     if (botMove.resign) {
-        return [botMove, res.text, true, "end"];
+        return [botMove, res.text, true, "end", beforeBotResponseBoard];
     }
 
     // update board
@@ -155,7 +159,7 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
 
     // if bot move is checkmate or stalemate, end game
     if (botMove.checkmate || botMove.stalemate) {
-        return [botMove, res.text, true, "end"];
+        return [botMove, res.text, true, "end", beforeBotResponseBoard];
     }
 
     // if bot move is valid, update board and turn
@@ -163,6 +167,6 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[GameMov
     session.lastMoveDate = new Date();
     session.lastMove = botMove;
 
-    return [botMove as GameMove, res.text, false, sound];
+    return [botMove as GameMove, res.text, false, sound, beforeBotResponseBoard];
 
 }

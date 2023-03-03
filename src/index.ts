@@ -10,6 +10,7 @@ import { GameMove } from './util/moves.js';
 import { moveSchema } from './validate.js';
 import { GameSound } from './util/general.js';
 import { MINUTE, HOUR } from './constants.js';
+import { Board } from './util/board.js';
 
 const app = express();
 app.use(express.json());
@@ -53,9 +54,13 @@ async function main() {
             return res.status(400).send({ error: 'Invalid move' });
         }
 
-        let botMove: GameMove|null, botResponse: string, gameEnd: boolean, sound: GameSound|undefined;
+        let botMove: GameMove|null, 
+            botResponse: string, 
+            gameEnd: boolean, 
+            sound: GameSound|undefined,
+            beforeBotResponseBoard: Board|undefined;
         try {
-            [botMove, botResponse, gameEnd, sound] = await makeMove(id, move);
+            [botMove, botResponse, gameEnd, sound, beforeBotResponseBoard] = await makeMove(id, move);
         } catch (err: any) {
             return res.status(400).send({ error: err.message });
         }
@@ -69,6 +74,7 @@ async function main() {
             date: session.lastMoveDate, 
             response: botResponse, 
             board: session.board,
+            beforeBotResponseBoard,
             gameEnd, sound
         });
     });
