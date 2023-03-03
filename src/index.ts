@@ -60,7 +60,7 @@ async function main() {
             sound: GameSound|undefined,
             beforeBotResponseBoard: Board|undefined;
         try {
-            [botMove, botResponse, gameEnd, sound, beforeBotResponseBoard] = await makeMove(id, move);
+            [botMove, gameEnd, sound, beforeBotResponseBoard] = await makeMove(id, move);
         } catch (err: any) {
             return res.status(400).send({ error: err.message });
         }
@@ -72,7 +72,7 @@ async function main() {
             turn: session.turn,
             move: botMove, 
             date: session.lastMoveDate, 
-            response: botResponse, 
+            response: session.response, 
             board: session.board,
             beforeBotResponseBoard,
             gameEnd, sound
@@ -86,7 +86,8 @@ async function main() {
         res.send({ 
             turn: session.turn,
             move: session.lastMove, 
-            date: session.lastMoveDate, 
+            date: session.lastMoveDate,
+            response: session.response,
             board: session.board,
             gameEnd: session.ended
         });

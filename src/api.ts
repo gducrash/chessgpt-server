@@ -36,6 +36,7 @@ export type GameSession = {
 
     board: Board;
     turn: 'white' | 'black';
+    response?: string;
     lastMoveDate: Date;
     lastMove?: GameMove;
     ended?: boolean;
@@ -57,7 +58,7 @@ export const getGameSession = (id: string) => {
 }
 
 export const makeMove = async (id: string, userMove: GameMove): Promise<[
-    GameMove|null, string, boolean, GameSound?, Board?
+    GameMove|null, boolean, GameSound?, Board?
 ]> => {
 
     const session = getGameSession(id);
@@ -77,7 +78,8 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[
 
     // if user move is resign, end game
     if (userMoveAny.resign) {
-        return [null, 'Good game!', true, "end"];
+        session.response = 'Good game!';
+        return [null, true, "end"];
     }
 
     // update board
@@ -102,9 +104,11 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[
     if (userMoveAny.checkmate || userMoveAny.selfCheckmate || userMoveAny.stalemate) {
         let s: string = "Good Game!";
         if (userMoveAny.checkmate) s = 'You beat me! Good game.';
-        else if (userMoveAny.selfCheckmate) s = 'You have no moves left. I win!';
-        else if (userMoveAny.stalemate) s = 'Draw! Good game.';
-        return [null, s, true, "end"];
+        else if (userMoveAny.selfCheckmate) s = 'Checkmate! You have no moves left — I win.';
+        else if (userMoveAny.stalemate) s = 'Draw by stalemate! Good game.';
+
+        session.response = s;
+        return [null, true, "end"];
     }
     
 
@@ -130,17 +134,19 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[
     
     // parse response
     const botMove = parseMoveString(res.text) as any;
+    session.response = res.text;
+
     if (!botMove) {
         session.turn = 'white';
         session.lastMoveDate = new Date();
         session.lastMove = prevLastMove;
         session.board = prevBoard;
-        return [null, res.text, false, "error", beforeBotResponseBoard];
+        return [null, false, "error", beforeBotResponseBoard];
     }
 
     // if bot move is resign
     if (botMove.resign) {
-        return [botMove, res.text, true, "end", beforeBotResponseBoard];
+        return [botMove, true, "end", beforeBotResponseBoard];
     }
 
     // update board
@@ -159,7 +165,7 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[
 
     // if bot move is checkmate or stalemate, end game
     if (botMove.checkmate || botMove.stalemate) {
-        return [botMove, res.text, true, "end", beforeBotResponseBoard];
+        return [botMove, true, "end", beforeBotResponseBoard];
     }
 
     // if bot move is valid, update board and turn
@@ -167,6 +173,6 @@ export const makeMove = async (id: string, userMove: GameMove): Promise<[
     session.lastMoveDate = new Date();
     session.lastMove = botMove;
 
-    return [botMove as GameMove, res.text, false, sound, beforeBotResponseBoard];
+    return [botMove as GameMove, false, sound, beforeBotResponseBoard];
 
 }
